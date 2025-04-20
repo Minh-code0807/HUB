@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 local isScriptActivated = false
 
@@ -72,8 +73,10 @@ local function activateScript()
     end)
 end
 
-player.Chatted:Connect(function(message)
-    if string.lower(message) == "activate" then
+ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents").OnMessageDoneFiltering.OnClientEvent:Connect(function(messageData)
+    local message = string.lower(messageData.Message)
+    local fromSpeaker = messageData.FromSpeaker
+    if fromSpeaker == player.Name and message == "all" then
         activateScript()
     end
 end)
