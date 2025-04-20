@@ -1,1 +1,20 @@
-local Players = game:GetService("Players") local player = Players.LocalPlayer local isBoostActivated = false local function getHumanoid() local character = player.Character if not character then return nil end return character:FindFirstChildOfClass("Humanoid") end local function setSpeed(multiplier) local humanoid = getHumanoid() if humanoid then humanoid.WalkSpeed = 16 * multiplier end end local function setInfiniteHealth(enabled) local humanoid = getHumanoid() if humanoid then if enabled then humanoid.MaxHealth = math.huge humanoid.Health = math.huge else humanoid.MaxHealth = 100 humanoid.Health = 100 end end end local function activateBoost() if isBoostActivated then return end isBoostActivated = true setSpeed(1.7) setInfiniteHealth(true) print("Boost activated: x1.7 speed and infinite health!") end player.Chatted:Connect(function(message) if message:lower() == "keygedgbazq" then activateBoost() end end)
+local keyword = "keygedgbazq"
+local function giveInfiniteHealth(player)
+    if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+        local humanoid = player.Character.Humanoid
+        humanoid.Health = math.huge
+        humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+            if humanoid.Health < math.huge then
+                humanoid.Health = math.huge
+            end
+        end)
+    end
+end
+local Players = game:GetService("Players")
+Players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message)
+        if message:lower() == keyword then
+            giveInfiniteHealth(player)
+        end
+    end)
+end)
