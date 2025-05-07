@@ -1,0 +1,96 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local flying = false
+local flySpeed = 50
+local sitEnabled = false
+
+-- Create GUI
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local sitButton = Instance.new("TextButton", screenGui)
+local flyButton = Instance.new("TextButton", screenGui)
+local speedButton = Instance.new("TextButton", screenGui)
+local plusButton = Instance.new("TextButton", screenGui)
+local minusButton = Instance.new("TextButton", screenGui)
+
+-- Button Settings
+sitButton.Size = UDim2.new(0, 100, 0, 50)
+sitButton.Position = UDim2.new(0, 10, 0, 10)
+sitButton.Text = "Sit Mode"
+
+flyButton.Size = UDim2.new(0, 100, 0, 50)
+flyButton.Position = UDim2.new(0, 10, 0, 70)
+flyButton.Text = "Fly Mode"
+
+speedButton.Size = UDim2.new(0, 100, 0, 50)
+speedButton.Position = UDim2.new(0, 10, 0, 130)
+speedButton.Text = "Speed Control"
+
+plusButton.Size = UDim2.new(0, 50, 0, 50)
+plusButton.Position = UDim2.new(0, 120, 0, 130)
+plusButton.Text = "+"
+
+minusButton.Size = UDim2.new(0, 50, 0, 50)
+minusButton.Position = UDim2.new(0, 180, 0, 130)
+minusButton.Text = "-"
+
+plusButton.Visible = false
+minusButton.Visible = false
+
+-- Sit Button Functionality
+sitButton.MouseButton1Click:Connect(function()
+    sitEnabled = not sitEnabled
+    if sitEnabled then
+        humanoid.Sit = true
+        sitButton.Text = "Stand Mode"
+    else
+        humanoid.Sit = false
+        sitButton.Text = "Sit Mode"
+    end
+end)
+
+-- Fly Button Functionality
+local bodyVelocity
+local bodyGyro
+
+flyButton.MouseButton1Click:Connect(function()
+    flying = not flying
+    if flying then
+        bodyVelocity = Instance.new("BodyVelocity", character.PrimaryPart)
+        bodyGyro = Instance.new("BodyGyro", character.PrimaryPart)
+        bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+        bodyGyro.MaxTorque = Vector3.new(100000, 100000, 100000)
+        bodyGyro.P = 3000
+        humanoid.PlatformStand = true
+
+        game:GetService("RunService").RenderStepped:Connect(function()
+            if flying then
+                bodyVelocity.Velocity = Vector3.new(mouse.Hit.LookVector.X, 0, mouse.Hit.LookVector.Z) * flySpeed
+                bodyGyro.CFrame = CFrame.new(character.PrimaryPart.Position, mouse.Hit.p)
+            end
+        end)
+        flyButton.Text = "Stop Fly"
+    else
+        if bodyVelocity then bodyVelocity:Destroy() end
+        if bodyGyro then bodyGyro:Destroy() end
+        humanoid.PlatformStand = false
+        flyButton.Text = "Fly Mode"
+    end
+end)
+
+-- Speed Control Button Functionality
+speedButton.MouseButton1Click:Connect(function()
+    plusButton.Visible = not plusButton.Visible
+    minusButton.Visible = not minusButton.Visible
+end)
+
+plusButton.MouseButton1Click:Connect(function()
+    flySpeed = flySpeed + 10
+end)
+
+minusButton.MouseButton1Click:Connect(function()
+    if flySpeed > 10 then
+        flySpeed = flySpeed - 10
+    end
+end)
