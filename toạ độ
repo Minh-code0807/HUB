@@ -1,0 +1,32 @@
+-- Tạo GUI hiển thị liên tục tọa độ của nhân vật
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Tạo ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CoordinateDisplay"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Tạo TextLabel để hiển thị thông tin
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(0.2, 0, 0.05, 0) -- Chiều rộng và chiều cao
+textLabel.Position = UDim2.new(0.8, 0, 0.05, 0) -- Vị trí góc phải trên
+textLabel.BackgroundColor3 = Color3.new(0, 0, 0) -- Màu nền (đen)
+textLabel.TextColor3 = Color3.new(1, 1, 1) -- Màu chữ (trắng)
+textLabel.TextScaled = true
+textLabel.Text = "Loading..."
+textLabel.Parent = screenGui
+
+-- Hàm cập nhật tọa độ
+local function updateCoordinates()
+    while true do
+        local position = humanoidRootPart.Position
+        textLabel.Text = string.format("X: %.2f | Y: %.2f | Z: %.2f",
+            position.X, position.Y, position.Z)
+        wait(0.1) -- Cập nhật mỗi 0.1 giây
+    end
+end
+
+-- Chạy hàm cập nhật trong một coroutine (luồng song song)
+coroutine.wrap(updateCoordinates)()
