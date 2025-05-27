@@ -1,0 +1,45 @@
+-- Script dịch chuyển tới từng vật phẩm trong Workspace.RuntimeItems.bond cách nhau 0.25 giây
+-- Đặt script này vào LocalScript (StarterPlayerScripts hoặc StarterCharacterScripts)
+
+local player = game.Players.LocalPlayer
+
+local function getCharacter()
+    return player.Character or player.CharacterAdded:Wait()
+end
+
+local function teleportTo(part)
+    local character = getCharacter()
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart and part and part:IsA("BasePart") then
+        humanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 3, 0)
+        print("Teleported to:", part.Name)
+    else
+        warn("Không tìm thấy HumanoidRootPart hoặc part không hợp lệ:", part)
+    end
+end
+
+local function main()
+    local runtimeItems = workspace:FindFirstChild("RuntimeItems")
+    if not runtimeItems then
+        warn("Không tìm thấy RuntimeItems trong Workspace")
+        return
+    end
+    local bondFolder = runtimeItems:FindFirstChild("bond")
+    if not bondFolder then
+        warn("Không tìm thấy bond trong RuntimeItems")
+        return
+    end
+    local found = false
+    for _, item in ipairs(bondFolder:GetChildren()) do
+        if item:IsA("BasePart") then
+            found = true
+            teleportTo(item)
+            task.wait(0.25)
+        end
+    end
+    if not found then
+        warn("Không tìm thấy BasePart nào trong bond!")
+    end
+end
+
+main()
