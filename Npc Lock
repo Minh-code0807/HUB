@@ -15,6 +15,10 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 12)
+frameCorner.Parent = frame
+
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(0, 120, 1, 0)
 titleLabel.Position = UDim2.new(0, 10, 0, 0)
@@ -34,6 +38,10 @@ toggleBtn.Font = Enum.Font.SourceSansBold
 toggleBtn.TextSize = 22
 toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleBtn.Parent = frame
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 10)
+buttonCorner.Parent = toggleBtn
 
 local isLocked = false
 
