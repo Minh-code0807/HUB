@@ -2,6 +2,7 @@
 
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local camera = workspace.CurrentCamera
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NpcLockGui"
@@ -44,6 +45,7 @@ buttonCorner.CornerRadius = UDim.new(0, 10)
 buttonCorner.Parent = toggleBtn
 
 local isLocked = false
+local oldCameraSubject = nil
 
 local function updateButton()
     if isLocked then
@@ -55,9 +57,63 @@ local function updateButton()
     end
 end
 
+local function isAlive(npc)
+    local humanoid = npc:FindFirstChildOfClass("Humanoid")
+    return humanoid and humanoid.Health > 0
+end
+
+local function getNearestAliveNPC()
+    local minDist = math.huge
+    local nearestNPC = nil
+    local playerChar = player.Character
+    if not playerChar or not playerChar.PrimaryPart then return nil end
+    local playerPos = playerChar.PrimaryPart.Position
+
+    for _, npc in ipairs(workspace:GetChildren()) do
+        if npc:IsA("Model") and npc ~= player.Character and isAlive(npc) then
+            local head = npc:FindFirstChild("Head")
+            if head then
+                local dist = (playerPos - head.Position).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    nearestNPC = npc
+                end
+            end
+        end
+    end
+    return nearestNPC
+end
+
+local function lockCameraToNPC()
+    local npc = getNearestAliveNPC()
+    if npc and npc:FindFirstChild("Head") then
+        oldCameraSubject = camera.CameraSubject
+        camera.CameraSubject = npc.Head
+    else
+        isLocked = false
+        updateButton()
+    end
+end
+
+local function unlockCamera()
+    if oldCameraSubject then
+        camera.CameraSubject = oldCameraSubject
+        oldCameraSubject = nil
+    else
+        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            camera.CameraSubject = player.Character:FindFirstChildOfClass("Humanoid")
+        end
+    end
+end
+
 toggleBtn.MouseButton1Click:Connect(function()
     isLocked = not isLocked
     updateButton()
+    if isLocked then
+        lockCameraToNPC()
+    else
+        unlockCamera()
+    end
 end)
 
 updateButton()
