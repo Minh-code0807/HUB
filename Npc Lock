@@ -1,15 +1,25 @@
--- Script: Draggable NPC Lock Frame with Camera Lock Functionality
-
 local player = game.Players.LocalPlayer
 local runService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
+local uis = game:GetService("UserInputService")
 
--- Tạo ScreenGui
+-- Helper: chờ Character và PrimaryPart
+local function getCharacterAndPrimary()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local primary = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
+    while not primary do
+        char = player.Character or player.CharacterAdded:Wait()
+        primary = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
+        task.wait()
+    end
+    return char, primary
+end
+
+-- Tạo GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NPCLockGui"
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Tạo Frame bo góc tròn & có thể kéo
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 270, 0, 70)
 frame.Position = UDim2.new(0.5, -135, 0.15, 0)
@@ -17,12 +27,10 @@ frame.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
--- Bo tròn góc Frame
 local uicorner = Instance.new("UICorner")
 uicorner.CornerRadius = UDim.new(0, 20)
 uicorner.Parent = frame
 
--- Tạo Label cho tên NPC Lock
 local nameLabel = Instance.new("TextLabel")
 nameLabel.Text = "Tên NPC Lock"
 nameLabel.Size = UDim2.new(0, 120, 1, 0)
@@ -34,7 +42,6 @@ nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 nameLabel.TextColor3 = Color3.fromRGB(30,30,30)
 nameLabel.Parent = frame
 
--- Tạo Button On/Off
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 80, 0, 40)
 toggleButton.Position = UDim2.new(0, 150, 0.5, -20)
@@ -45,12 +52,11 @@ toggleButton.Text = "On"
 toggleButton.TextColor3 = Color3.fromRGB(255,255,255)
 toggleButton.Parent = frame
 
--- Bo tròn góc Button
 local btnCorner = Instance.new("UICorner")
 btnCorner.CornerRadius = UDim.new(0, 12)
 btnCorner.Parent = toggleButton
 
--- Drag function cho khung
+-- Drag
 local dragging = false
 local dragInput, mousePos, framePos
 
@@ -74,7 +80,7 @@ frame.InputChanged:Connect(function(input)
     end
 end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
+uis.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - mousePos
         frame.Position = UDim2.new(
@@ -84,19 +90,17 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
     end
 end)
 
--- Hàm lấy NPC gần nhất (không phải player, máu > 0)
+-- Tìm NPC gần nhất
 local function getNearestNPC()
     local nearest
     local minDist = math.huge
-    local char = player.Character
-    if not char or not char.PrimaryPart then return nil end
+    local char, primary = getCharacterAndPrimary()
     for _, model in ipairs(workspace:GetChildren()) do
         if model:IsA("Model") and model:FindFirstChildOfClass("Humanoid") then
-            -- Không lấy player
             if not game.Players:GetPlayerFromCharacter(model) then
                 local humanoid = model:FindFirstChildOfClass("Humanoid")
                 if humanoid.Health > 0 and model.PrimaryPart then
-                    local dist = (char.PrimaryPart.Position - model.PrimaryPart.Position).Magnitude
+                    local dist = (primary.Position - model.PrimaryPart.Position).Magnitude
                     if dist < minDist then
                         minDist = dist
                         nearest = model
@@ -108,7 +112,7 @@ local function getNearestNPC()
     return nearest
 end
 
--- Logic ON/OFF Camera
+-- Watch logic
 local watching = false
 local watchingConnection
 
@@ -122,6 +126,7 @@ local function startWatching()
             camera.CFrame = npc.PrimaryPart.CFrame
             nameLabel.Text = npc.Name
         else
+            camera.CameraType = Enum.CameraType.Custom
             nameLabel.Text = "Không tìm thấy NPC"
         end
     end)
@@ -133,12 +138,10 @@ local function stopWatching()
         watchingConnection:Disconnect()
         watchingConnection = nil
     end
-    -- Trả lại camera cho người chơi
     camera.CameraType = Enum.CameraType.Custom
     nameLabel.Text = "Tên NPC Lock"
 end
 
--- Sự kiện nút bật/tắt
 toggleButton.MouseButton1Click:Connect(function()
     if toggleButton.Text == "On" then
         toggleButton.Text = "Off"
@@ -151,7 +154,6 @@ toggleButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Đảm bảo dọn dẹp khi player rời đi
 player.AncestryChanged:Connect(function()
     stopWatching()
 end)
