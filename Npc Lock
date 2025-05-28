@@ -1,143 +1,142 @@
--- Place this LocalScript in StarterGui
+-- Script: Dragable NPC Lock Frame with Camera Lock Functionality
 
 local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local runService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
-local RunService = game:GetService("RunService")
 
+-- Tạo ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "NpcLockGui"
-screenGui.Parent = playerGui
+screenGui.Name = "NPCLockGui"
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
+-- Tạo Frame bo góc tròn & có thể kéo
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 60)
-frame.Position = UDim2.new(0, 100, 0, 100)
-frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-frame.Active = true
-frame.Draggable = true
+frame.Size = UDim2.new(0, 270, 0, 70)
+frame.Position = UDim2.new(0.5, -135, 0.15, 0)
+frame.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
-local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0, 12)
-frameCorner.Parent = frame
+-- Bo tròn góc Frame
+local uicorner = Instance.new("UICorner")
+uicorner.CornerRadius = UDim.new(0, 20)
+uicorner.Parent = frame
 
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(0, 120, 1, 0)
-titleLabel.Position = UDim2.new(0, 10, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "Npc Lock"
-titleLabel.Font = Enum.Font.SourceSansBold
-titleLabel.TextSize = 24
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Parent = frame
+-- Tạo Label cho tên NPC Lock
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Text = "Tên NPC Lock"
+nameLabel.Size = UDim2.new(0, 120, 1, 0)
+nameLabel.Position = UDim2.new(0, 12, 0, 0)
+nameLabel.BackgroundTransparency = 1
+nameLabel.Font = Enum.Font.SourceSansBold
+nameLabel.TextSize = 20
+nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+nameLabel.TextColor3 = Color3.fromRGB(30,30,30)
+nameLabel.Parent = frame
 
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Size = UDim2.new(0, 50, 0, 40)
-toggleBtn.Position = UDim2.new(0, 140, 0.5, -20)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-toggleBtn.Font = Enum.Font.SourceSansBold
-toggleBtn.TextSize = 22
-toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleBtn.Parent = frame
+-- Tạo Button On/Off
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 80, 0, 40)
+toggleButton.Position = UDim2.new(0, 150, 0.5, -20)
+toggleButton.BackgroundColor3 = Color3.fromRGB(55, 180, 75)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 22
+toggleButton.Text = "On"
+toggleButton.TextColor3 = Color3.fromRGB(255,255,255)
+toggleButton.Parent = frame
 
-local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 10)
-buttonCorner.Parent = toggleBtn
+-- Bo tròn góc Button
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(0, 12)
+btnCorner.Parent = toggleButton
 
-local isLocked = false
-local oldCameraSubject = nil
-local renderConnection = nil
+-- Drag function cho khung
+local dragging = false
+local dragInput, mousePos, framePos
 
-local function updateButton()
-    if isLocked then
-        toggleBtn.Text = "ON"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 80)
-    else
-        toggleBtn.Text = "OFF"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(180, 80, 80)
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = input.Position
+        framePos = frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
     end
-end
+end)
 
-local function isAliveNPC(model)
-    if game.Players:GetPlayerFromCharacter(model) then
-        return false
+frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
     end
-    local humanoid = model:FindFirstChildOfClass("Humanoid")
-    return humanoid and humanoid.Health > 0
-end
+end)
 
-local function getNearestAliveNPC()
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - mousePos
+        frame.Position = UDim2.new(
+            framePos.X.Scale, framePos.X.Offset + delta.X,
+            framePos.Y.Scale, framePos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Hàm lấy NPC gần nhất (không phải player, máu > 0)
+local function getNearestNPC()
+    local nearest
     local minDist = math.huge
-    local nearestNPC = nil
-    local playerChar = player.Character
-    if not playerChar or not playerChar.PrimaryPart then return nil end
-    local playerPos = playerChar.PrimaryPart.Position
-
+    local char = player.Character
+    if not char or not char.PrimaryPart then return nil end
     for _, model in ipairs(workspace:GetChildren()) do
-        if model:IsA("Model") and isAliveNPC(model) then
-            local head = model:FindFirstChild("Head")
-            if head then
-                local dist = (playerPos - head.Position).Magnitude
-                if dist < minDist then
-                    minDist = dist
-                    nearestNPC = model
+        if model:IsA("Model") and model:FindFirstChildOfClass("Humanoid") then
+            -- Không lấy player
+            if not game.Players:GetPlayerFromCharacter(model) then
+                local humanoid = model:FindFirstChildOfClass("Humanoid")
+                if humanoid.Health > 0 and model.PrimaryPart then
+                    local dist = (char.PrimaryPart.Position - model.PrimaryPart.Position).Magnitude
+                    if dist < minDist then
+                        minDist = dist
+                        nearest = model
+                    end
                 end
             end
         end
     end
-    return nearestNPC
+    return nearest
 end
 
-local function startLockCamera()
-    if not oldCameraSubject then
-        oldCameraSubject = camera.CameraSubject
-    end
-    if renderConnection then
-        renderConnection:Disconnect()
-    end
-    renderConnection = RunService.RenderStepped:Connect(function()
-        local npc = getNearestAliveNPC()
-        if npc and npc:FindFirstChild("Head") then
-            camera.CameraSubject = npc.Head
-        else
-            isLocked = false
-            updateButton()
-            if oldCameraSubject then
-                camera.CameraSubject = oldCameraSubject
-                oldCameraSubject = nil
-            end
-            if renderConnection then
-                renderConnection:Disconnect()
-                renderConnection = nil
-            end
+-- Logic ON/OFF Camera
+local watching = false
+local watchingConnection
+
+local function startWatching()
+    watching = true
+    watchingConnection = runService.RenderStepped:Connect(function()
+        if not watching then return end
+        local npc = getNearestNPC()
+        if npc then
+            camera.CameraType = Enum.CameraType.Scriptable
+            camera.CFrame = npc.PrimaryPart.CFrame
         end
     end)
 end
 
-local function stopLockCamera()
-    if renderConnection then
-        renderConnection:Disconnect()
-        renderConnection = nil
+local function stopWatching()
+    watching = false
+    if watchingConnection then
+        watchingConnection:Disconnect()
+        watchingConnection = nil
     end
-    if oldCameraSubject then
-        camera.CameraSubject = oldCameraSubject
-        oldCameraSubject = nil
-    else
-        if player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
-            camera.CameraSubject = player.Character:FindFirstChildOfClass("Humanoid")
-        end
-    end
+    -- Trả lại camera cho người chơi
+    camera.CameraType = Enum.CameraType.Custom
 end
 
-toggleBtn.MouseButton1Click:Connect(function()
-    isLocked = not isLocked
-    updateButton()
-    if isLocked then
-        startLockCamera()
-    else
-        stopLockCamera()
-    end
-end)
-
-updateButton()
+-- Sự kiện nút bật/tắt
+toggleButton.MouseButton1Click:Connect(function()
+    if toggleButton.Text == "On" then
+        toggleButton.Text = "Off"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50_
+
