@@ -3,7 +3,6 @@ local runService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
 local uis = game:GetService("UserInputService")
 
--- Helper: chờ Character và PrimaryPart
 local function getCharacterAndPrimary()
     local char = player.Character or player.CharacterAdded:Wait()
     local primary = char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
@@ -15,62 +14,64 @@ local function getCharacterAndPrimary()
     return char, primary
 end
 
--- Tạo GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NPCLockGui"
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 270, 0, 70)
-frame.Position = UDim2.new(0.5, -135, 0.15, 0)
+frame.Size = UDim2.new(0, 210, 0, 48)
+frame.Position = UDim2.new(0.5, -105, 0.13, 0)
 frame.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
 local uicorner = Instance.new("UICorner")
-uicorner.CornerRadius = UDim.new(0, 20)
+uicorner.CornerRadius = UDim.new(0, 14)
 uicorner.Parent = frame
 
 local nameLabel = Instance.new("TextLabel")
 nameLabel.Text = "Tên NPC Lock"
-nameLabel.Size = UDim2.new(0, 120, 1, 0)
-nameLabel.Position = UDim2.new(0, 12, 0, 0)
+nameLabel.Size = UDim2.new(0, 90, 0, 24)
+nameLabel.Position = UDim2.new(0, 10, 0, 12)
 nameLabel.BackgroundTransparency = 1
 nameLabel.Font = Enum.Font.SourceSansBold
-nameLabel.TextSize = 20
+nameLabel.TextSize = 16
 nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 nameLabel.TextColor3 = Color3.fromRGB(30,30,30)
 nameLabel.Parent = frame
 
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 80, 0, 40)
-toggleButton.Position = UDim2.new(0, 150, 0.5, -20)
+toggleButton.Size = UDim2.new(0, 60, 0, 30)
+toggleButton.Position = UDim2.new(1, -70, 0, 9)
 toggleButton.BackgroundColor3 = Color3.fromRGB(55, 180, 75)
 toggleButton.Font = Enum.Font.SourceSansBold
-toggleButton.TextSize = 22
-toggleButton.Text = "On"
+toggleButton.TextSize = 18
+toggleButton.Text = "Lock"
 toggleButton.TextColor3 = Color3.fromRGB(255,255,255)
 toggleButton.Parent = frame
 
 local btnCorner = Instance.new("UICorner")
-btnCorner.CornerRadius = UDim.new(0, 12)
+btnCorner.CornerRadius = UDim.new(0, 8)
 btnCorner.Parent = toggleButton
 
--- Drag
 local dragging = false
 local dragInput, mousePos, framePos
 
 frame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        mousePos = input.Position
-        framePos = frame.Position
+        local relative = input.Position - frame.AbsolutePosition
+        if not (relative.X >= toggleButton.Position.X.Offset and relative.X <= toggleButton.Position.X.Offset + toggleButton.Size.X.Offset
+             and relative.Y >= toggleButton.Position.Y.Offset and relative.Y <= toggleButton.Position.Y.Offset + toggleButton.Size.Y.Offset) then
+            dragging = true
+            mousePos = input.Position
+            framePos = frame.Position
 
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
     end
 end)
 
@@ -90,17 +91,17 @@ uis.InputChanged:Connect(function(input)
     end
 end)
 
--- Tìm NPC gần nhất
 local function getNearestNPC()
     local nearest
     local minDist = math.huge
-    local char, primary = getCharacterAndPrimary()
+    local _, primary = getCharacterAndPrimary()
     for _, model in ipairs(workspace:GetChildren()) do
         if model:IsA("Model") and model:FindFirstChildOfClass("Humanoid") then
             if not game.Players:GetPlayerFromCharacter(model) then
                 local humanoid = model:FindFirstChildOfClass("Humanoid")
-                if humanoid.Health > 0 and model.PrimaryPart then
-                    local dist = (primary.Position - model.PrimaryPart.Position).Magnitude
+                local part = model.PrimaryPart or model:FindFirstChild("HumanoidRootPart")
+                if humanoid and humanoid.Health > 0 and part then
+                    local dist = (primary.Position - part.Position).Magnitude
                     if dist < minDist then
                         minDist = dist
                         nearest = model
@@ -112,7 +113,6 @@ local function getNearestNPC()
     return nearest
 end
 
--- Watch logic
 local watching = false
 local watchingConnection
 
@@ -121,9 +121,13 @@ local function startWatching()
     watchingConnection = runService.RenderStepped:Connect(function()
         if not watching then return end
         local npc = getNearestNPC()
-        if npc then
+        if npc and (npc.PrimaryPart or npc:FindFirstChild("HumanoidRootPart")) then
+            local part = npc.PrimaryPart or npc:FindFirstChild("HumanoidRootPart")
             camera.CameraType = Enum.CameraType.Scriptable
-            camera.CFrame = npc.PrimaryPart.CFrame
+            camera.CFrame = CFrame.lookAt(
+                part.Position + Vector3.new(0, 5, 10),
+                part.Position
+            )
             nameLabel.Text = npc.Name
         else
             camera.CameraType = Enum.CameraType.Custom
@@ -143,12 +147,12 @@ local function stopWatching()
 end
 
 toggleButton.MouseButton1Click:Connect(function()
-    if toggleButton.Text == "On" then
-        toggleButton.Text = "Off"
+    if toggleButton.Text == "Lock" then
+        toggleButton.Text = "Unlock"
         toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
         startWatching()
     else
-        toggleButton.Text = "On"
+        toggleButton.Text = "Lock"
         toggleButton.BackgroundColor3 = Color3.fromRGB(55, 180, 75)
         stopWatching()
     end
@@ -156,4 +160,12 @@ end)
 
 player.AncestryChanged:Connect(function()
     stopWatching()
+end)
+
+player.CharacterAdded:Connect(function()
+    stopWatching()
+end)
+
+game:BindToClose(function()
+    screenGui:Destroy()
 end)
