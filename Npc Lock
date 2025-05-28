@@ -3,6 +3,7 @@
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NpcLockGui"
@@ -46,6 +47,7 @@ buttonCorner.Parent = toggleBtn
 
 local isLocked = false
 local oldCameraSubject = nil
+local renderConnection = nil
 
 local function updateButton()
     if isLocked then
@@ -57,8 +59,11 @@ local function updateButton()
     end
 end
 
-local function isAlive(npc)
-    local humanoid = npc:FindFirstChildOfClass("Humanoid")
+local function isAliveNPC(model)
+    if game.Players:GetPlayerFromCharacter(model) then
+        return false
+    end
+    local humanoid = model:FindFirstChildOfClass("Humanoid")
     return humanoid and humanoid.Health > 0
 end
 
@@ -69,14 +74,14 @@ local function getNearestAliveNPC()
     if not playerChar or not playerChar.PrimaryPart then return nil end
     local playerPos = playerChar.PrimaryPart.Position
 
-    for _, npc in ipairs(workspace:GetChildren()) do
-        if npc:IsA("Model") and npc ~= player.Character and isAlive(npc) then
-            local head = npc:FindFirstChild("Head")
+    for _, model in ipairs(workspace:GetChildren()) do
+        if model:IsA("Model") and isAliveNPC(model) then
+            local head = model:FindFirstChild("Head")
             if head then
                 local dist = (playerPos - head.Position).Magnitude
                 if dist < minDist then
                     minDist = dist
-                    nearestNPC = npc
+                    nearestNPC = model
                 end
             end
         end
@@ -84,18 +89,37 @@ local function getNearestAliveNPC()
     return nearestNPC
 end
 
-local function lockCameraToNPC()
-    local npc = getNearestAliveNPC()
-    if npc and npc:FindFirstChild("Head") then
+local function startLockCamera()
+    if not oldCameraSubject then
         oldCameraSubject = camera.CameraSubject
-        camera.CameraSubject = npc.Head
-    else
-        isLocked = false
-        updateButton()
     end
+    if renderConnection then
+        renderConnection:Disconnect()
+    end
+    renderConnection = RunService.RenderStepped:Connect(function()
+        local npc = getNearestAliveNPC()
+        if npc and npc:FindFirstChild("Head") then
+            camera.CameraSubject = npc.Head
+        else
+            isLocked = false
+            updateButton()
+            if oldCameraSubject then
+                camera.CameraSubject = oldCameraSubject
+                oldCameraSubject = nil
+            end
+            if renderConnection then
+                renderConnection:Disconnect()
+                renderConnection = nil
+            end
+        end
+    end)
 end
 
-local function unlockCamera()
+local function stopLockCamera()
+    if renderConnection then
+        renderConnection:Disconnect()
+        renderConnection = nil
+    end
     if oldCameraSubject then
         camera.CameraSubject = oldCameraSubject
         oldCameraSubject = nil
@@ -110,9 +134,9 @@ toggleBtn.MouseButton1Click:Connect(function()
     isLocked = not isLocked
     updateButton()
     if isLocked then
-        lockCameraToNPC()
+        startLockCamera()
     else
-        unlockCamera()
+        stopLockCamera()
     end
 end)
 
