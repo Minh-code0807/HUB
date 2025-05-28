@@ -1,4 +1,4 @@
--- Script: Dragable NPC Lock Frame with Camera Lock Functionality
+-- Script: Draggable NPC Lock Frame with Camera Lock Functionality
 
 local player = game.Players.LocalPlayer
 local runService = game:GetService("RunService")
@@ -120,6 +120,9 @@ local function startWatching()
         if npc then
             camera.CameraType = Enum.CameraType.Scriptable
             camera.CFrame = npc.PrimaryPart.CFrame
+            nameLabel.Text = npc.Name
+        else
+            nameLabel.Text = "Không tìm thấy NPC"
         end
     end)
 end
@@ -132,11 +135,23 @@ local function stopWatching()
     end
     -- Trả lại camera cho người chơi
     camera.CameraType = Enum.CameraType.Custom
+    nameLabel.Text = "Tên NPC Lock"
 end
 
 -- Sự kiện nút bật/tắt
 toggleButton.MouseButton1Click:Connect(function()
     if toggleButton.Text == "On" then
         toggleButton.Text = "Off"
-        toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50_
-
+        toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        startWatching()
+    else
+        toggleButton.Text = "On"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(55, 180, 75)
+        stopWatching()
+    end
+end)
+
+-- Đảm bảo dọn dẹp khi player rời đi
+player.AncestryChanged:Connect(function()
+    stopWatching()
+end)
