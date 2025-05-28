@@ -1,0 +1,40 @@
+-- Quét các vật phẩm trong Workspace.RuntimeItems.bond (Folder) và lưu các vị trí x, y, z duy nhất, đánh số thứ tự
+
+local folder = workspace:FindFirstChild("RuntimeItems")
+if not folder then
+    warn("Không tìm thấy RuntimeItems trong Workspace.")
+    return
+end
+
+local itemsFolder = folder:FindFirstChild("bond")
+if not itemsFolder or not itemsFolder:IsA("Folder") then
+    warn("Không tìm thấy bond (Folder) trong RuntimeItems.")
+    return
+end
+
+local uniquePositions = {}
+local positionSet = {}
+
+local function positionToString(pos)
+    return string.format("%.2f,%.2f,%.2f", pos.X, pos.Y, pos.Z)
+end
+
+for _, item in ipairs(itemsFolder:GetChildren()) do
+    local part = item
+    if item:IsA("Model") then
+        part = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart")
+    end
+    if part and part:IsA("BasePart") then
+        local posStr = positionToString(part.Position)
+        if not positionSet[posStr] then
+            positionSet[posStr] = true
+            table.insert(uniquePositions, {position = part.Position, name = item.Name})
+        end
+    end
+end
+
+print("Danh sách vị trí vật phẩm duy nhất:")
+for i, data in ipairs(uniquePositions) do
+    local pos = data.position
+    print(string.format("%d. %s | x: %.2f, y: %.2f, z: %.2f", i, data.name, pos.X, pos.Y, pos.Z))
+end
