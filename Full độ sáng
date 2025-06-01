@@ -1,0 +1,45 @@
+local originalBrightness = nil
+local fullBrightEnabled = false
+
+createButton("Full Bright", function()
+    local lighting = game:GetService("Lighting")
+    fullBrightEnabled = not fullBrightEnabled
+    
+    if fullBrightEnabled then
+        -- Lưu giá trị ánh sáng ban đầu
+        if not originalBrightness then
+            originalBrightness = {
+                Ambient = lighting.Ambient,
+                Brightness = lighting.Brightness,
+                GlobalShadows = lighting.GlobalShadows,
+                OutdoorAmbient = lighting.OutdoorAmbient
+            }
+        end
+        
+        -- Giảm bóng tối 85%
+        lighting.Ambient = Color3.new(1, 1, 1)
+        lighting.Brightness = 2
+        lighting.GlobalShadows = false
+        lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Full Bright",
+            Text = "Đã bật Full Bright!",
+            Duration = 2,
+        })
+    else
+        -- Khôi phục ánh sáng ban đầu
+        if originalBrightness then
+            lighting.Ambient = originalBrightness.Ambient
+            lighting.Brightness = originalBrightness.Brightness
+            lighting.GlobalShadows = originalBrightness.GlobalShadows
+            lighting.OutdoorAmbient = originalBrightness.OutdoorAmbient
+        end
+        
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Full Bright",
+            Text = "Đã tắt Full Bright!",
+            Duration = 2,
+        })
+    end
+end)
