@@ -1,0 +1,3 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/ringtaa/castletpfast.github.io/refs/heads/main/FASTCASTLE.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Minh-code0807/HUB/refs/heads/main/Nh%E1%BA%B7t%20bond"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Minh-code0807/HUB/refs/heads/main/Nh%C3%ACn%20bond"))()
