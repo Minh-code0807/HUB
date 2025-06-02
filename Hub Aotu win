@@ -64,3 +64,20 @@ if character then
         humanoid.Sit = false
     end
 end
+-- Giá trị X ban đầu
+local initialX = 428.75
+
+-- Tính toán giá trị X mới (giảm 77.85)
+local newX = initialX - 77.85
+
+-- Đặt hướng nhìn (0.10, 0.00, -0.99)
+local lookDirection = {
+    x = 0.10,
+    y = 0.00,
+    z = -0.99
+}
+
+-- In kết quả
+print("Giá trị X ban đầu:", initialX)
+print("Giá trị X mới:", newX)
+print("Hướng nhìn:", lookDirection.x, lookDirection.y, lookDirection.z)
