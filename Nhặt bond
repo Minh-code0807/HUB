@@ -1,0 +1,13 @@
+-- Ultra Optimized Continuous Pickup Script
+local VIM = game:GetService("VirtualInputManager")
+local DELAY = 0.35 -- Optimal delay for continuous pickup
+
+while true do
+    -- Press and release E with minimal delay
+    VIM:SendKeyEvent(true, "E", false, game)
+    task.wait(0.02)
+    VIM:SendKeyEvent(false, "E", false, game)
+    
+    -- Adjustable delay between pickups
+    task.wait(DELAY) 
+end
