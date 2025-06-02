@@ -1,3 +1,4 @@
+task.wait(600)
 -- Hàm chính để thực hiện quy trình
 local function autoSitOnTurret()
     local character = game.Players.LocalPlayer.Character
