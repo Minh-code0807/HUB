@@ -81,3 +81,42 @@ local lookDirection = {
 print("Giá trị X ban đầu:", initialX)
 print("Giá trị X mới:", newX)
 print("Hướng nhìn:", lookDirection.x, lookDirection.y, lookDirection.z)
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local E_HOLD_DURATION = 15
+local eHoldStartTime = 0
+local isHoldingE = false
+
+local function onInputBegan(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.E then
+        eHoldStartTime = os.time()
+        isHoldingE = true
+        print("Bắt đầu giữ E...")
+    end
+end
+
+local function onInputEnded(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.E then
+        local holdTime = os.time() - eHoldStartTime
+        isHoldingE = false
+        if holdTime < E_HOLD_DURATION then
+            print("Thả phím E sớm (giữ được "..holdTime.." giây)")
+        end
+    end
+end
+
+local function checkHoldTime()
+    if isHoldingE and os.time() - eHoldStartTime >= E_HOLD_DURATION then
+        isHoldingE = false
+        -- Thêm hành động của bạn ở đây
+        print("Đã giữ E đủ 15 giây!")
+        yourFunctionToCall() -- Gọi hàm có sẵn của bạn
+    end
+end
+
+-- Kết nối sự kiện (thêm vào phần khởi tạo script)
+game:GetService("UserInputService").InputBegan:Connect(onInputBegan)
+game:GetService("UserInputService").InputEnded:Connect(onInputEnded)
+game:GetService("RunService").Heartbeat:Connect(checkHoldTime)
