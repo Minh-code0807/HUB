@@ -22,7 +22,7 @@ game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
         end
         until game.Players.LocalPlayer.Character.Humanoid.Sit == true
     end
-end})
+end)
 wait (5)
 game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
     wait(0.5)
@@ -48,8 +48,8 @@ game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
         end
         until game.Players.LocalPlayer.Character.Humanoid.Sit == true
     end
-end})
+end)
 wait (10)
         game.Players.LocalPlayer.Character.Humanoid.Sit = false
     end
-end})
+end)
