@@ -1,0 +1,90 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local guiService = game:GetService("GuiService")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "FullScreenTimer"
+screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Create main frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(1, 0, 1, 0)
+mainFrame.Position = UDim2.new(0, 0, 0, 0)
+mainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+mainFrame.BackgroundTransparency = 0.3
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- Create "Auto win is run" text
+local titleText = Instance.new("TextLabel")
+titleText.Name = "TitleText"
+titleText.Size = UDim2.new(1, 0, 0.5, 0)
+titleText.Position = UDim2.new(0, 0, 0.1, 0)
+titleText.BackgroundTransparency = 1
+titleText.Text = "Auto win is run"
+titleText.TextColor3 = Color3.new(1, 1, 1)
+titleText.TextScaled = true
+titleText.Font = Enum.Font.GothamBlack
+titleText.TextSize = 50
+titleText.Parent = mainFrame
+
+-- Create timer text
+local timerText = Instance.new("TextLabel")
+timerText.Name = "TimerText"
+timerText.Size = UDim2.new(1, 0, 0.3, 0)
+timerText.Position = UDim2.new(0, 0, 0.5, 0)
+timerText.BackgroundTransparency = 1
+timerText.Text = "14:00"
+timerText.TextColor3 = Color3.new(1, 1, 1)
+timerText.TextScaled = true
+timerText.Font = Enum.Font.GothamBlack
+timerText.TextSize = 80
+timerText.Parent = mainFrame
+
+-- Countdown function
+local function startCountdown()
+    local minutes = 14
+    local seconds = 0
+    
+    while minutes >= 0 and seconds >= 0 do
+        -- Update timer text
+        timerText.Text = string.format("%02d:%02d", minutes, seconds)
+        
+        -- Wait for 1 second
+        wait(1)
+        
+        -- Decrement time
+        if seconds > 0 then
+            seconds = seconds - 1
+        else
+            if minutes > 0 then
+                minutes = minutes - 1
+                seconds = 59
+            else
+                break -- Timer finished
+            end
+        end
+    end
+    
+    -- Timer finished, wait 30 seconds
+    wait(30)
+    
+    -- Set player Y position to -50
+    local character = player.Character
+    if character then
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            humanoidRootPart.Position = Vector3.new(humanoidRootPart.Position.X, -50, humanoidRootPart.Position.Z)
+        end
+    end
+    
+    -- Remove the GUI after completion
+    screenGui:Destroy()
+end
+
+-- Start the countdown
+startCountdown()
