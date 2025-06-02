@@ -1,55 +1,65 @@
-game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
-    wait(0.5)
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-424, 30, -49041)
-    repeat task.wait() until workspace.Baseplates:FindFirstChild("FinalBasePlate")
-    local BasePart = workspace.Baseplates:FindFirstChild("FinalBasePlate")
-    local OurLaw = BasePart:FindFirstChild("OutlawBase")
-    local Sen = OurLaw:FindFirstChild("Sentries")
-    if Sen:FindFirstChild("TurretSpot") and Sen.TurretSpot:FindFirstChild("MaximGun") and Sen.TurretSpot.MaximGun:FindFirstChild("VehicleSeat") then
-        wait(1.5)
-        for i, v in pairs(Sen:FindFirstChild("TurretSpot"):GetChildren()) do
-            if v.Name == "MaximGun" and v:FindFirstChild("VehicleSeat") then
-                v.VehicleSeat.Disabled = false
-            end
+-- Hàm chính để thực hiện quy trình
+local function autoSitOnTurret()
+    local character = game.Players.LocalPlayer.Character
+    if not character then return end
+    
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoidRootPart or not humanoid then return end
+
+    -- Bước 1: Di chuyển đến vị trí ban đầu
+    humanoidRootPart.Anchored = true
+    task.wait(0.5)
+    humanoidRootPart.CFrame = CFrame.new(-424, 30, -49041)
+    
+    -- Chờ đợi baseplate xuất hiện
+    local basePlate
+    repeat
+        task.wait()
+        basePlate = workspace.Baseplates:FindFirstChild("FinalBasePlate")
+    until basePlate
+    
+    local ourLaw = basePlate:FindFirstChild("OutlawBase")
+    if not ourLaw then return end
+    
+    local sen = ourLaw:FindFirstChild("Sentries")
+    if not sen then return end
+    
+    local turretSpot = sen:FindFirstChild("TurretSpot")
+    if not turretSpot then return end
+    
+    -- Tìm và kích hoạt súng
+    for _, v in pairs(turretSpot:GetChildren()) do
+        if v.Name == "MaximGun" and v:FindFirstChild("VehicleSeat") then
+            v.VehicleSeat.Disabled = false
         end
-        wait(0.5)
-        game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
-        repeat task.wait()
-        for i, v in pairs(Sen:FindFirstChild("TurretSpot"):GetChildren()) do
-            if v.Name == "MaximGun" and v:FindFirstChild("VehicleSeat") then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v:FindFirstChild("VehicleSeat").CFrame
-            end
-        end
-        until game.Players.LocalPlayer.Character.Humanoid.Sit == true
     end
-end)
-wait (5)
-game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = true
-    wait(0.5)
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-424, 30, -49041)
-    repeat task.wait() until workspace.Baseplates:FindFirstChild("FinalBasePlate")
-    local BasePart = workspace.Baseplates:FindFirstChild("FinalBasePlate")
-    local OurLaw = BasePart:FindFirstChild("OutlawBase")
-    local Sen = OurLaw:FindFirstChild("Sentries")
-    if Sen:FindFirstChild("TurretSpot") and Sen.TurretSpot:FindFirstChild("MaximGun") and Sen.TurretSpot.MaximGun:FindFirstChild("VehicleSeat") then
-        wait(1.5)
-        for i, v in pairs(Sen:FindFirstChild("TurretSpot"):GetChildren()) do
+    
+    task.wait(0.5)
+    humanoidRootPart.Anchored = false
+    
+    -- Cố gắng ngồi vào súng
+    repeat
+        task.wait()
+        for _, v in pairs(turretSpot:GetChildren()) do
             if v.Name == "MaximGun" and v:FindFirstChild("VehicleSeat") then
-                v.VehicleSeat.Disabled = false
+                humanoidRootPart.CFrame = v.VehicleSeat.CFrame
             end
         end
-        wait(0.5)
-        game.Players.LocalPlayer.Character.HumanoidRootPart.Anchored = false
-        repeat task.wait()
-        for i, v in pairs(Sen:FindFirstChild("TurretSpot"):GetChildren()) do
-            if v.Name == "MaximGun" and v:FindFirstChild("VehicleSeat") then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v:FindFirstChild("VehicleSeat").CFrame
-            end
-        end
-        until game.Players.LocalPlayer.Character.Humanoid.Sit == true
+    until humanoid.Sit or not humanoidRootPart
+end
+
+-- Chạy quy trình 2 lần với khoảng cách thời gian
+autoSitOnTurret()
+task.wait(5)
+autoSitOnTurret()
+task.wait(10)
+
+-- Đứng dậy sau 10 giây
+local character = game.Players.LocalPlayer.Character
+if character then
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.Sit = false
     end
-end)
-wait (10)
-        game.Players.LocalPlayer.Character.Humanoid.Sit = false
-    end
-end)
+end
