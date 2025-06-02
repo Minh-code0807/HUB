@@ -1,0 +1,36 @@
+local Workspace = workspace
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+-- Biến cache
+local player = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+local target = Workspace:FindFirstChild("RuntimeItems")?.bond
+
+if not target then return end
+
+-- Config
+local LERP_FACTOR = 0.2
+local MAX_ANGLE = math.rad(5) -- 5 độ chuyển sang radian
+
+-- Pre-declare variables để tối ưu bộ nhớ
+local cameraCF, targetPos, toTarget, desiredLook, currentLook, angleDiff
+
+RunService.Heartbeat:Connect(function()
+    cameraCF = camera.CFrame
+    targetPos = target.Position
+    
+    -- Vector tính toán
+    toTarget = (targetPos - cameraCF.Position)
+    desiredLook = toTarget.Unit
+    currentLook = cameraCF.LookVector
+    
+    -- Kiểm tra góc lệch
+    angleDiff = currentLook:Angle(desiredLook)
+    if angleDiff > MAX_ANGLE then
+        camera.CFrame = cameraCF:Lerp(
+            CFrame.lookAt(cameraCF.Position, cameraCF.Position + desiredLook),
+            LERP_FACTOR
+        )
+    end
+end)
